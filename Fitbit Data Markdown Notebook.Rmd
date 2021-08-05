@@ -1,0 +1,119 @@
+---
+title: "Declan's Fitbit Data - July 2021"
+author: "Declan Murphy"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
+---
+
+```{r setup, include = FALSE}
+rm(list=ls())
+setwd("/Users/declanmurphy/Documents/Health")
+library(tidyverse)
+library(readxl)
+library(lubridate)
+```
+
+## Data Import
+I downloaded this past month's fitness data, measured by my Fitbit Inspire 2,
+to take a look at some trends and areas for potential improvement. These records
+are provided in a handy Excel format for the past 31 days.
+
+Note that I purchased by Fitbit on 7/3/21, so I'm missing data for 7/1 and 7/2.
+
+```{r Data Import}
+Fitbit <- read_excel("/Users/declanmurphy/Documents/Health/fitbit_export_20210723..xls",
+                     sheet = 3)
+
+Fitbit$Date <- ymd(Fitbit$Date)
+```
+
+We've brought in the data set, specifying sheet 3 to capture only the data on 
+my activity. Now let's take a look at a preview of the data:
+
+```{r Preview}
+print(Fitbit)
+```
+## Additional Variables for Analysis
+The activity data is imported! But before we do any analysis, we need to add some new
+variables -- namely, a variable for TOTAL minutes that are active, and a variable
+for calories burned due to my base metabolic rate (BMR). So let's create these easily:
+
+```{r New Variables}
+Fitbit <- Fitbit %>%
+  mutate(
+    Total_Minutes_Active = `Minutes Lightly Active` + `Minutes Fairly Active` +
+      `Minutes Very Active`,
+    BMR_Calories = `Calories Burned` - `Activity Calories`)
+
+print(Fitbit)
+```
+
+## Graph 1: Active Minutes
+First, let's see how my active minutes varied over the course of the month.
+```{r Graphing Active Minutes}
+Active_graph <- ggplot(data=Fitbit,
+                       aes(x=`Date`, y=`Total_Minutes_Active`))+
+  geom_bar(stat="identity",
+           fill = "dodgerblue") +
+  labs(title = "Active Minutes for July",
+       y = "Total Active Minutes")+
+  theme_minimal()
+
+print(Active_graph)
+
+```
+
+## Graph 2: Calories Burned
+```{r Graphing Calories Burned}
+Calories <- ggplot(Fitbit,
+                   aes(x= `Date`, y = `Calories Burned`)) +
+  geom_line(color = "red") +
+  geom_point(shape = 17) +
+  geom_hline(yintercept = 3700, 
+             color = "blue") +
+  scale_x_date(date_breaks = "5 days") +
+  theme_minimal()
+
+print(Calories)
+
+```
+
+
+## Graph 3: Burn Efficiency
+Since we've already looked at active minutes and calories burned, the natural 
+next question is: how well did these minutes of activity translate into calories?
+
+For this first bar graph, we can use the existing variables to generate a new 
+vector, `Burn Rate`, which is simply the average calories burned per minute of 
+activity.
+
+```{r Simple Bar}
+
+Fitbit <- Fitbit %>%
+  mutate(Burn_Rate = `Activity Calories` / `Total_Minutes_Active`)
+
+Avg_Burn <- ggplot(Fitbit, 
+                   aes(x=`Date`, y=Burn_Rate))+
+  geom_bar(stat="identity",
+           fill = "dodgerblue")+
+  labs(y = "Calories Burned Per Minute of Activity")+
+  theme_minimal()
+print(Avg_Burn)
+```
+
+## Graph 4: Linear Fit of Calories Burned vs. Active Minutes
+
+```{r Calories vs. Minutes}
+Burn <- ggplot(Fitbit, aes(x=`Total_Minutes_Active`,
+                           y=`Activity Calories`))+
+  geom_smooth(method = "lm")+
+  geom_point()+
+  labs(x = "Total Active Minutes")+
+  theme_minimal()
+
+print(Burn)
+```
+
