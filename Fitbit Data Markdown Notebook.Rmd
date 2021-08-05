@@ -107,13 +107,13 @@ print(Avg_Burn)
 ## Graph 4: Linear Fit of Calories Burned vs. Active Minutes
 
 ```{r Calories vs. Minutes}
-Burn <- ggplot(Fitbit, aes(x=`Total_Minutes_Active`,
+Burn2 <- ggplot(Fitbit, aes(x=`Total_Minutes_Active`,
                            y=`Activity Calories`))+
   geom_smooth(method = "lm")+
   geom_point()+
   labs(x = "Total Active Minutes")+
   theme_minimal()
 
-print(Burn)
+print(Burn2)
 ```
 
